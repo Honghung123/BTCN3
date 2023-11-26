@@ -9,18 +9,8 @@ const fs = require("fs/promises");
 app.use(express.static(__dirname));
 app.use(express.urlencoded({ extended: true }));
 
-const arrSkip = ["settings", "_locals", "cache"];
-app.engine("html", async (filePath, options, callback) => {
-  // define the template engine
-  const content = await fs.readFile(filePath, { encoding: "utf-8" });
-  let rendered = content;
-  for (const key in options) {
-    if (options.hasOwnProperty(key) && arrSkip.indexOf(key) == -1) {
-      rendered = rendered.replace(`{{${key}}}`, options[key]);
-    }
-  }
-  return callback(null, rendered);
-});
+const customTemplateEngine = require("./21461");
+app.engine("html", customTemplateEngine);
 
 app.set("views", "./views");
 app.set("view engine", "html");

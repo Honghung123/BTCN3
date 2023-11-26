@@ -8,3 +8,130 @@ a {
     font-weight: bold;
   }
 }
+.w-30 {
+  width: 30%;
+}
+
+.bg-toggle {
+  background-color: white;
+  border: 2px solid rgb(168, 168, 168);
+  &.darks {
+    background: black !important;
+    color: white !important;
+  }
+}
+
+.bg-grays {
+  background: #868686;
+}
+
+.bg-grays.darks {
+  background: black !important;
+  color: white !important;
+}
+
+.text-black {
+  color: black;
+  &.white {
+    color: white;
+  }
+}
+
+.courseItem {
+  float: left;
+  margin: 0 0.5rem;
+  width: 372px;
+  height: 240px;
+  cursor: pointer;
+  border: 2px solid rgb(85, 85, 85);
+
+  &:hover {
+    transform: scale(1.2);
+    z-index: 10;
+    & > .title-movie {
+      display: block !important;
+      & > p {
+        margin: 0 !important;
+      }
+    }
+  }
+}
+
+#carouselMostPopular > .carousel-indicators,
+#carouselTopRating > .carousel-indicators {
+  margin-right: 3%;
+  top: -9%;
+  left: auto;
+  right: 1%;
+  z-index: 0;
+}
+
+.p-lr {
+  padding: 0 1rem;
+}
+
+.carousel-item {
+  cursor: pointer;
+}
+
+#app {
+  width: 1200px;
+  margin: 0 auto;
+}
+
+.col-sm-4 > .card {
+  min-height: 30rem;
+  & > img {
+    object-fit: cover;
+  }
+}
+
+.actor {
+  cursor: pointer;
+  font-weight: bold;
+  &:hover {
+    color: rgb(128, 209, 7);
+  }
+}
+
+.cs-pointer {
+  cursor: pointer;
+}
+
+.translate-top-100 {
+  transform: translateY(-100%);
+  padding: 0 0.2rem;
+}
+
+.min-height-custom {
+  cursor: pointer;
+  height: 98%;
+  &.h18 {
+    min-height: 18rem;
+  }
+  & > img {
+    height: 10rem !important;
+    object-fit: cover;
+    object-position: center;
+  }
+  &.h30 > img {
+    height: 30rem !important;
+  }
+}
+
+.comment {
+  & ~ & {
+    margin-top: 2rem;
+  }
+  & > p {
+    margin: 0 !important;
+  }
+}
+
+.custom-text {
+  cursor: pointer;
+  font-weight: bold;
+  &:hover {
+    color: greenyellow;
+  }
+}

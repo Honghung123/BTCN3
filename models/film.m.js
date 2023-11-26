@@ -1,16 +1,15 @@
-const db = require("../db/db21461");
+const DBProvider = require("../db/db21461s");
 const tableName = "person";
 module.exports = class User {
   static loadAPI = false;
-  constructor({ id, first_name, last_name, email, avatar }) {
-    this.id = id;
-    this.first_name = first_name;
-    this.last_name = last_name;
-    this.email = email;
-    this.avatar = avatar;
+  constructor({ movies, names, reviews }) {
+    this.movies = movies;
+    this.names = names;
+    this.reviews = reviews;
   }
   static async getAll() {
-    await db.loadAllJsonToDatabase();
+    const data = await DBProvider.fetch("search/movie/the?per_page=2&page=1");
+    // console.log(data);
   }
   // static async saveAll(people) {
   //   return await db.saveAll(tableName, people);

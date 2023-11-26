@@ -3,7 +3,7 @@ const Film = require("../models/film.m");
 async function getAllFilms(req, res, next) {
   try {
     await Film.getAll();
-    res.render("index");
+    res.render("index", { x: "Hoang" });
   } catch (error) {
     next(error);
   }
