@@ -47,13 +47,17 @@
         </div>
     </nav>
     21461{if x }
+    21461{if y }
     <p>TRUE</p>
+    {/if}
     {else}
     <p>FALSE</p>
     {/if}
-    21461{for e in arr }
-    <p>21461{ e.prop1 }</p>
-    <img src="21461{e.prop2}" />
+    21461{for ar in arrs}
+    21461{for e in ar}
+    <h2><b>21461{ e.prop1 }</b></h2>
+    <h2>21461{e.prop2}</h2>
+    {/for}
     {/for}
     <div class="carousels d-flex justify-content-center mb-4 ">
         <div id="carouselNewestMovie" class="carousel slide w-30">

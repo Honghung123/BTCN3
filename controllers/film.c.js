@@ -5,8 +5,20 @@ async function getAllFilms(req, res, next) {
     await Film.getAll();
     res.render("index", {
       x: "Hoang",
-      student: {name: "Hung", age: 18},
-      arr: [{ prop1: "Cute", prop2: "image" }],
+      y: true,
+      student: { name: "Hung", age: 18 },
+      arr: [
+        { prop1: "Hoang", prop2: "image2" },
+        { prop1: "Cute", prop2: "image" },
+      ],
+      arrs: [
+        [{ prop1: "Hoang", prop2: "image2" }],
+        [{ prop1: "Hoang1", prop2: "image23" }],
+        [
+          { prop1: "Hoang2", prop2: "image3" },
+          { prop1: "Hoang4", prop2: "image5" },
+        ],
+      ],
     });
   } catch (error) {
     next(error);
