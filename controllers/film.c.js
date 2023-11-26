@@ -4,6 +4,8 @@ async function getAllFilms(req, res, next) {
   try {
     await Film.getAll();
     res.render("index", {
+      a: 4,
+      b: 5,
       x: "Hoang",
       y: true,
       student: { name: "Hung", age: 18 },

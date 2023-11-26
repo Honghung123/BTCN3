@@ -1,4 +1,5 @@
 const fs = require("fs/promises");
+const math = require("mathjs");
 
 // Hàm hỗ trợ để lấy giá trị từ một đường dẫn biến
 function getValueFromPath(object, path) {
@@ -23,6 +24,57 @@ function render(rendered, data) {
     if (value != "") {
       rendered = rendered.replace(fullMatch, value);
     }
+  }
+  return rendered;
+}
+
+// Hàm đánh giá biểu thức tính toán
+function evaluateExpression(rendered, options) {
+  let matchList = [];
+  let matchValue = [];
+  const expRegex = /21461{(\s*([\w.]+)\s*([+\-*\/%]\s*([\w.]+)\s*)*)}/g;
+  while ((match = expRegex.exec(rendered)) !== null) {
+    let [fullMatch, expression] = match;
+    const operands = expression.split(/\s+/);
+    for (let op of operands) {
+      if (!op.match(/[+\-*\/%\d]/)) {
+        const value = getValueFromPath(options, op);
+        expression = expression.replace(op, value);
+      }
+    }
+    try {
+      // Sử dụng thư viện math.js để đánh giá biểu thức
+      matchList.push(fullMatch);
+      matchValue.push(math.evaluate(expression));
+    } catch (error) {
+      console.error("Error evaluating expression:", error);
+    }
+  }
+  for (let i = 0; i < matchList.length; i++) {
+    rendered = rendered.replace(matchList[i], matchValue[i]);
+  }
+  return rendered;
+}
+function compareExpressions(rendered, options) {
+  let cmpRegex =
+    /21461{(\s*if\s+(\w+)\s*(==|!=|===|>=|>|<=|<)\s*(\w+)\s*)}([\s\S]*?){\s*else\s*}([\s\S]*?){\s*\/if\s*}/gs;
+  while ((match = cmpRegex.exec(rendered)) !== null) {
+    const [fullMatch, condition, ifContent, elseContent] = match;
+    console.log(fullMatch);
+    const value = options[condition];
+    // Thực hiện thay thế nội dung dựa trên điều kiện
+    const replacement = value ? ifContent : elseContent || "";
+    rendered = rendered.replace(fullMatch, replacement);
+  }
+  cmpRegex =
+    /21461{(\s*if\s+(\w+)\s*(==|!=|===|>=|>|<=|<)\s*(\w+)\s*)}([\s\S]*?){\s*\/if\s*}/gs;
+  while ((match = cmpRegex.exec(rendered)) !== null) {
+    const [fullMatch, ifstatement, first, op, second, content] = match;
+    let condition = ifstatement.replace("if", "").trim();
+    const value = eval(condition);
+    // Thực hiện thay thế nội dung dựa trên điều kiện
+    const replacement = value ? content : "";
+    rendered = rendered.replace(fullMatch, replacement);
   }
   return rendered;
 }
@@ -129,7 +181,9 @@ const renderTemplate = async function (filePath, options, callback) {
   const content = await fs.readFile(filePath, { encoding: "utf-8" });
   let rendered = content;
   rendered = await renderPartials(rendered);
+  rendered = evaluateExpression(rendered, options);
   rendered = render(rendered, options);
+  rendered = compareExpressions(rendered, options);
 
   // Thêm hỗ trợ cho câu lệnh if-else
   const ifElseRegex =
