@@ -1,6 +1,5 @@
 const fs = require("fs/promises");
 const math = require("mathjs");
-
 // Hàm hỗ trợ để lấy giá trị từ một đường dẫn biến
 function getValueFromPath(object, path) {
   const parts = path.split(".");
@@ -9,7 +8,7 @@ function getValueFromPath(object, path) {
     if (value.hasOwnProperty(part)) {
       value = value[part];
     } else {
-      return "";
+      return null;
     }
   }
   return value;
@@ -21,7 +20,7 @@ function render(rendered, data) {
   while ((match = variableRegex.exec(rendered)) !== null) {
     const [fullMatch, variableName] = match;
     const value = getValueFromPath(data, variableName);
-    if (value != "") {
+    if (value != null && value != undefined) {
       rendered = rendered.replace(fullMatch, value);
     }
   }
@@ -32,7 +31,7 @@ function render(rendered, data) {
 function evaluateExpression(rendered, options) {
   let matchList = [];
   let matchValue = [];
-  const expRegex = /21461{(\s*([\w.]+)\s*([+\-*\/%]\s*([\w.]+)\s*)*)}/g;
+  const expRegex = /21461{(\s*([\w.]+)\s*([+\-*\/%]\s*([\w.]+)\s*)+)}/g;
   while ((match = expRegex.exec(rendered)) !== null) {
     let [fullMatch, expression] = match;
     const operands = expression.split(/\s+/);
@@ -57,23 +56,26 @@ function evaluateExpression(rendered, options) {
 }
 function compareExpressions(rendered, options) {
   let cmpRegex =
-    /21461{(\s*if\s+(\w+)\s*(==|!=|===|>=|>|<=|<)\s*(\w+)\s*)}([\s\S]*?){\s*else\s*}([\s\S]*?){\s*\/if\s*}/gs;
-  while ((match = cmpRegex.exec(rendered)) !== null) {
-    const [fullMatch, condition, ifContent, elseContent] = match;
-    console.log(fullMatch);
-    const value = options[condition];
-    // Thực hiện thay thế nội dung dựa trên điều kiện
-    const replacement = value ? ifContent : elseContent || "";
-    rendered = rendered.replace(fullMatch, replacement);
-  }
-  cmpRegex =
     /21461{(\s*if\s+(\w+)\s*(==|!=|===|>=|>|<=|<)\s*(\w+)\s*)}([\s\S]*?){\s*\/if\s*}/gs;
   while ((match = cmpRegex.exec(rendered)) !== null) {
     const [fullMatch, ifstatement, first, op, second, content] = match;
+    if (fullMatch.match(/{\s*else\s*}/) != null) continue;
     let condition = ifstatement.replace("if", "").trim();
     const value = eval(condition);
     // Thực hiện thay thế nội dung dựa trên điều kiện
     const replacement = value ? content : "";
+    rendered = rendered.replace(fullMatch, replacement);
+  }
+
+  cmpRegex =
+    /21461{(\s*if\s+(\w+)\s*(==|!=|===|>=|>|<=|<)\s*(\w+)\s*)}([\s\S]*?){\s*else\s*}([\s\S]*?){\s*\/if\s*}/gs;
+  while ((match = cmpRegex.exec(rendered)) !== null) {
+    const [fullMatch, ifstatement, first, op, second, ifContent, elseContent] =
+      match;
+    let condition = ifstatement.replace("if", "").trim();
+    const value = eval(condition);
+    // Thực hiện thay thế nội dung dựa trên điều kiện
+    const replacement = value ? ifContent : elseContent;
     rendered = rendered.replace(fullMatch, replacement);
   }
   return rendered;
@@ -100,10 +102,18 @@ async function renderPartials(rendered) {
 
 function renderFor(rendered, options) {
   const forRegex =
-    /21461{for\s+(\w+)\s+in\s+(\w+)\s*}([\s\S]*?){\s*\/for\s*}/gs;
+    /21461{for\s+(\w+)\s+in\s+([\w.]+)\s*}([\s\S]*?){\s*\/for\s*}/gs;
   while ((match = forRegex.exec(rendered)) !== null) {
     const [fullMatch, variable, array, content] = match;
-    const items = options[array];
+    let items = [];
+    array.split(".").forEach((prop, idx) => {
+      if (idx == 0) {
+        items = options[[prop]];
+      } else {
+        let value = items[prop];
+        items = value;
+      }
+    });
     if (Array.isArray(items)) {
       // Thực hiện vòng lặp và thay thế nội dung vòng lặp trong template
       const replacement = items
@@ -123,6 +133,38 @@ function renderFor(rendered, options) {
   }
   return rendered;
 }
+
+function renderForIndex(rendered, options) {
+  const forRegex =
+    /21461{for\s+(\w+)\s+from\s+(\w+)\s+to\s+([\w.]+)\s*}([\s\S]*?){\s*\/for\s*}/gs;
+  while ((match = forRegex.exec(rendered)) !== null) {
+    const [fullMatch, variable, start, end, content] = match;
+    // Thực hiện vòng lặp và thay thế nội dung vòng lặp trong template
+    let startInt = 0;
+    let endInt = 0;
+    if (!start.match(/\s*\d+\s*/)) {
+      startInt = getValueFromPath(options, start);
+    } else {
+      startInt = parseInt(start);
+    }
+    if (!end.match(/\s*\d\s*/)) {
+      endInt = getValueFromPath(options, end);
+    } else {
+      endInt = parseInt(end);
+    }
+    let replacement = "";
+    for (let idx = startInt; idx < endInt; idx++) {
+      // replacement += render(content, { [variable]: idx });
+      let cons = render(content, { [variable]: idx });
+      cons = compareExpressions(cons, { [variable]: idx });
+      // console.log(cons);
+      replacement += cons;
+    }
+    rendered = rendered.replace(fullMatch, replacement);
+  }
+  return rendered;
+}
+
 function renderNestedFor(rendered, options) {
   // Thêm hỗ trợ cho vòng lặp lồng nhau
   const nestedForRegex =
@@ -177,15 +219,7 @@ function renderNestedFor(rendered, options) {
   return rendered;
 }
 
-const renderTemplate = async function (filePath, options, callback) {
-  const content = await fs.readFile(filePath, { encoding: "utf-8" });
-  let rendered = content;
-  rendered = await renderPartials(rendered);
-  rendered = evaluateExpression(rendered, options);
-  rendered = render(rendered, options);
-  rendered = compareExpressions(rendered, options);
-
-  // Thêm hỗ trợ cho câu lệnh if-else
+function renderIf(rendered, options) {
   const ifElseRegex =
     /21461{\s*if\s+(\w+)\s*}([\s\S]*?){\s*else\s*}([\s\S]*?){\s*\/if\s*}/gs;
   let match;
@@ -196,12 +230,28 @@ const renderTemplate = async function (filePath, options, callback) {
     const replacement = value ? ifContent : elseContent || "";
     rendered = rendered.replace(fullMatch, replacement);
   }
+  return rendered;
+}
+
+const renderTemplate = async function (filePath, options, callback) {
+  const content = await fs.readFile(filePath, { encoding: "utf-8" });
+  let rendered = content;
+  rendered = await renderPartials(rendered);
+  rendered = render(rendered, options);
+  // console.log(rendered);
+  rendered = evaluateExpression(rendered, options);
+
+  // Thêm hỗ trợ cho câu lệnh if-else
+  rendered = renderIf(rendered, options);
 
   // Thêm hỗ trợ cho vòng lặp lồng nhau
   rendered = renderNestedFor(rendered, options);
 
   //Thêm hỗ trợ cho câu lệnh for
+  // console.log(rendered);
   rendered = renderFor(rendered, options);
+  rendered = renderForIndex(rendered, options);
+  // console.log(rendered);
 
   // If lồng trong if else
   const ifRegex = /21461{\s*if\s+(\w+)\s*}([\s\S]*?){\s*\/if\s*}/gs;
@@ -212,6 +262,7 @@ const renderTemplate = async function (filePath, options, callback) {
     const replacement = value ? ifContent : elseContent || "";
     rendered = rendered.replace(fullMatch, replacement);
   }
+  rendered = compareExpressions(rendered, options);
 
   // Phân chia template
 

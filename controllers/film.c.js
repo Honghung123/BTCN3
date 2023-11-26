@@ -2,25 +2,14 @@ const Film = require("../models/film.m");
 
 async function getAllFilms(req, res, next) {
   try {
-    await Film.getAll();
+    const top5Rating = await Film.getTopRating();
+    const top5 = { total: top5Rating.total, film: top5Rating.items };
+    // console.log(top5Rating);
     res.render("index", {
-      a: 4,
-      b: 5,
-      x: "Hoang",
-      y: true,
+      tops: top5,
+      age: 45,
+      tester: { prop1: "Hoang" },
       student: { name: "Hung", age: 18 },
-      arr: [
-        { prop1: "Hoang", prop2: "image2" },
-        { prop1: "Cute", prop2: "image" },
-      ],
-      arrs: [
-        [{ prop1: "Hoang", prop2: "image2" }],
-        [{ prop1: "Hoang1", prop2: "image23" }],
-        [
-          { prop1: "Hoang2", prop2: "image3" },
-          { prop1: "Hoang4", prop2: "image5" },
-        ],
-      ],
     });
   } catch (error) {
     next(error);

@@ -1,4 +1,2 @@
-import { DBProvider } from "./../../db/db21461.js";
-const data = require("./../../data/data.json");
-console.log(DBProvider.loadAll);
-console.log(data);
+const db = require("./../../db/db21461s.js");
+console.log(await db.fetch("get/movie/top5"));

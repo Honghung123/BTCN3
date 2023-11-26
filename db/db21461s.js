@@ -46,12 +46,24 @@ module.exports = {
     }
     return res;
   },
+  getTopRating(movieList, count) {
+    let list = [];
+    movieList.forEach((movie) => {
+      if (movie.imDbRating != "" && movie.imDbRating != null) {
+        list.push(movie);
+      }
+    });
+    list = list.sort(
+      (movie1, movie2) =>
+        movie2.imDbRating.toString() - movie1.imDbRating.toString()
+    ); 
+    return list.slice(0, count);
+  },
   async fetch(query) {
     try {
       const jsonData = await fs.readFileSync(pathToFile);
       const jsonObject = await JSON.parse(jsonData);
       const { Movies: movies, Names: names, Reviews: reviews } = jsonObject;
-      //   console.log(movies);
       //   console.log(reviews);
       //   console.log(names);
       let page = 1;
@@ -64,7 +76,6 @@ module.exports = {
       if (rest.includes("?")) {
         const [pattern, params] = rest.split("?");
         searchs = pattern;
-
         const paramsList = params.split("&");
         //  page: 1, per_page: 6, total_page: 13, total: 75, items: [ movie1, movie2,... ] }
         page = this.filterParams(paramsList, "page", 1);
@@ -84,45 +95,36 @@ module.exports = {
                 queryParam.name.toLowerCase().includes(pattern.toLowerCase()) ||
                 queryParam.id.toLowerCase().includes(pattern.toLowerCase())
             );
+            //   } else if (className === "topboxoffice") {
+            //     //   items = this.filterTitleMovie(reviews, pattern);
+            //   }
+            // Xử lý các loại khác tương tự cho tìm kiếm.
+          } else if (className == "movie") {
+            //   if (className === "review") {
+            //     items = reviews.filter((queryParam) =>
+            //       queryParam.movieId.toLowerCase().includes(pattern.toLowerCase())
+            //     )[0].items;
+            //   }
+            //   if (className === "mostpopular") {
+            //     items = mostpopularMovies;
+            //   }
+            if (className === "topboxoffice") {
+              items = this.getMaxDanhThu(movies, 5);
+            }
+            //   // Xử lý các loại khác tương tự cho lấy danh sách.
           }
-          //   } else if (className === "top50") {
-          //     items = top50.filter(
-          //       (queryParam) =>
-          //         queryParam.title
-          //           .toLowerCase()
-          //           .includes(pattern.toLowerCase()) ||
-          //         queryParam.id.toLowerCase().includes(pattern.toLowerCase()) ||
-          //         queryParam.title.toLowerCase().includes(pattern.toLowerCase())
-          //     );
-          //   } else if (className === "mostpopular") {
-          //     items = mostpopularMovies.filter(
-          //       (queryParam) =>
-          //         queryParam.title
-          //           .toLowerCase()
-          //           .includes(pattern.toLowerCase()) ||
-          //         queryParam.id.toLowerCase().includes(pattern.toLowerCase())
-          //     );
-          //   } else if (className === "topboxoffice") {
-          //     //   items = this.filterTitleMovie(reviews, pattern);
-          //   }
-          // Xử lý các loại khác tương tự cho tìm kiếm.
-          // } else if (type === "get") {
-          //   if (className === "top50") {
-          //     items = top50;
-          //   }
-          //   if (className === "review") {
-          //     items = reviews.filter((queryParam) =>
-          //       queryParam.movieId.toLowerCase().includes(pattern.toLowerCase())
-          //     )[0].items;
-          //   }
-          //   if (className === "mostpopular") {
-          //     items = mostpopularMovies;
-          //   }
-          //   if (className === "topboxoffice") {
-          //     items = this.getMaxDanhThu(movies, 5);
-          //   }
-          //   // Xử lý các loại khác tương tự cho lấy danh sách.
-          // }
+        } else if (type == "get") {
+          if (pattern == "top5") {
+            items = this.getTopRating(movies, 5);
+            return {
+              search: rest,
+              page : 1,
+              per_page : 1,
+              total_page : 1,
+              total : 5,
+              items,
+            };
+          }
         }
       }
       if (type === "detail") {

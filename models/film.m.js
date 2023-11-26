@@ -8,8 +8,12 @@ module.exports = class User {
     this.reviews = reviews;
   }
   static async getAll() {
-    const data = await DBProvider.fetch("search/movie/the?per_page=2&page=1");
-    // console.log(data);
+    const data = await DBProvider.fetch("get/movie/top5?per_page=2&page=1");
+    return data;
+  }
+  static async getTopRating() {
+    const data = await DBProvider.fetch("get/movie/top5?per_page=2&page=1");
+    return data;
   }
   // static async saveAll(people) {
   //   return await db.saveAll(tableName, people);
