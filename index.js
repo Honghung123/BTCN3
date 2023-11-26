@@ -1,5 +1,7 @@
 // Import module
 require("dotenv").config();
+const port = process.env.PORT | 3000;
+const hostname = process.env.HOST | "localhost";
 const express = require("express");
 const app = express();
 const fs = require("fs/promises");
@@ -24,16 +26,14 @@ app.set("views", "./views");
 app.set("view engine", "html");
 
 // Routing
-const userRouter = require("./routers/user.r");
-app.use("/", userRouter);
+const filmRouter = require("./routers/film.r");
+app.use("/", filmRouter);
 
 // Middleware
 const middleware = require("./middlewares/mdw");
-app.use(middleware);
+app.use(middleware.middleware);
 
 // Connection
-const port = process.env.PORT | 3000;
-const hostname = process.env.HOSTNAME | "localhost";
 app.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+  console.log(`Server running at ${port}`);
 });
