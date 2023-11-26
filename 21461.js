@@ -27,6 +27,25 @@ function render(rendered, data) {
   return rendered;
 }
 
+// Hàm đệ quy để xử lý các phần template nhỏ
+async function renderPartials(rendered) {
+  // Thêm hỗ trợ cho các phần template nhỏ
+  const partialRegex = /21461{\+\s*([\w.]+)\s*}/g;
+  let match;
+  while ((match = partialRegex.exec(rendered)) !== null) {
+    const [fullMatch, partialName] = match;
+    // Đọc nội dung của file partial
+    const partialContent = await fs.readFile(`./views/${partialName}.html`, {
+      encoding: "utf-8",
+    });
+    // Đệ quy để xử lý các phần template nhỏ bên trong
+    const replacedPartialContent = await renderPartials(partialContent);
+    // Thay thế phần template nhỏ trong template chính
+    rendered = rendered.replace(fullMatch, replacedPartialContent);
+  }
+  return rendered;
+}
+
 function renderFor(rendered, options) {
   const forRegex =
     /21461{for\s+(\w+)\s+in\s+(\w+)\s*}([\s\S]*?){\s*\/for\s*}/gs;
@@ -85,18 +104,12 @@ function renderNestedFor(rendered, options) {
               .map((innerItem) => {
                 const object = { [innerVar]: innerItem };
                 const itemContent = render(innerInnerVar, object);
-                console.log(itemContent);
+                // console.log(itemContent);
                 return itemContent;
               })
               .join("");
-
-            // return render(outerContent, {
-            //   [outerVar]: outerArr,
-            //   [innerVar]: innerReplacement,
-            // });
             return innerReplacement;
           }
-
           return "";
         })
         .join("");
@@ -115,6 +128,7 @@ function renderNestedFor(rendered, options) {
 const renderTemplate = async function (filePath, options, callback) {
   const content = await fs.readFile(filePath, { encoding: "utf-8" });
   let rendered = content;
+  rendered = await renderPartials(rendered);
   rendered = render(rendered, options);
 
   // Thêm hỗ trợ cho câu lệnh if-else
@@ -129,11 +143,11 @@ const renderTemplate = async function (filePath, options, callback) {
     rendered = rendered.replace(fullMatch, replacement);
   }
 
-  //Thêm hỗ trợ cho câu lệnh for
-  // rendered = renderFor(rendered, options);
-
   // Thêm hỗ trợ cho vòng lặp lồng nhau
   rendered = renderNestedFor(rendered, options);
+
+  //Thêm hỗ trợ cho câu lệnh for
+  rendered = renderFor(rendered, options);
 
   // If lồng trong if else
   const ifRegex = /21461{\s*if\s+(\w+)\s*}([\s\S]*?){\s*\/if\s*}/gs;
@@ -144,6 +158,8 @@ const renderTemplate = async function (filePath, options, callback) {
     const replacement = value ? ifContent : elseContent || "";
     rendered = rendered.replace(fullMatch, replacement);
   }
+
+  // Phân chia template
 
   return callback(null, rendered);
 };
