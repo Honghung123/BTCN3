@@ -3,7 +3,11 @@ const Film = require("../models/film.m");
 async function getAllFilms(req, res, next) {
   try {
     await Film.getAll();
-    res.render("index", { x: "Hoang" });
+    res.render("index", {
+      x: "Hoang",
+      student: {name: "Hung", age: 18},
+      arr: [{ prop1: "Cute", prop2: "image" }],
+    });
   } catch (error) {
     next(error);
   }
