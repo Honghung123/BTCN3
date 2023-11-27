@@ -56,7 +56,7 @@ function evaluateExpression(rendered, options) {
 }
 function compareExpressions(rendered, options) {
   let cmpRegex =
-    /21461{(\s*if\s+(\w+)\s*(==|!=|===|>=|>|<=|<)\s*(\w+)\s*)}([\s\S]*?){\s*\/if\s*}/gs;
+    /21461{(\s*if\s+(\d+)\s*(==|!=|===|>=|>|<=|<)\s*(\d+)\s*)}([\s\S]*?){\s*\/if\s*}/gs;
   while ((match = cmpRegex.exec(rendered)) !== null) {
     const [fullMatch, ifstatement, first, op, second, content] = match;
     if (fullMatch.match(/{\s*else\s*}/) != null) continue;
@@ -68,7 +68,7 @@ function compareExpressions(rendered, options) {
   }
 
   cmpRegex =
-    /21461{(\s*if\s+(\w+)\s*(==|!=|===|>=|>|<=|<)\s*(\w+)\s*)}([\s\S]*?){\s*else\s*}([\s\S]*?){\s*\/if\s*}/gs;
+    /21461{(\s*if\s+(\d+)\s*(==|!=|===|>=|>|<=|<)\s*(\d+)\s*)}([\s\S]*?){\s*else\s*}([\s\S]*?){\s*\/if\s*}/gs;
   while ((match = cmpRegex.exec(rendered)) !== null) {
     const [fullMatch, ifstatement, first, op, second, ifContent, elseContent] =
       match;
@@ -82,7 +82,7 @@ function compareExpressions(rendered, options) {
 }
 
 // Hàm đệ quy để xử lý các phần template nhỏ
-async function renderPartials(rendered) {
+async function renderPartials(rendered, options) {
   // Thêm hỗ trợ cho các phần template nhỏ
   const partialRegex = /21461{\+\s*([\w.]+)\s*}/g;
   let match;
@@ -96,13 +96,17 @@ async function renderPartials(rendered) {
     const replacedPartialContent = await renderPartials(partialContent);
     // Thay thế phần template nhỏ trong template chính
     rendered = rendered.replace(fullMatch, replacedPartialContent);
+    rendered = renderFor(rendered, options);
+    rendered = renderForAlongWithIndex(rendered, options);
+    rendered = renderNestedFor(rendered, options);
   }
   return rendered;
 }
 
 function renderFor(rendered, options) {
   const forRegex =
-    /21461{for\s+(\w+)\s+in\s+([\w.]+)\s*}([\s\S]*?){\s*\/for\s*}/gs;
+    /21461{for\s+(\w+)\s+in\s+([\w.]+)\s*}([\s\S]*?){\s*\/for\s*}/g;
+  let forNested = [];
   while ((match = forRegex.exec(rendered)) !== null) {
     const [fullMatch, variable, array, content] = match;
     let items = [];
@@ -128,6 +132,55 @@ function renderFor(rendered, options) {
       rendered = rendered.replace(fullMatch, replacement);
     } else {
       // Nếu không phải mảng, loại bỏ vòng lặp
+      forNested.push(fullMatch);
+      rendered = rendered.replace(fullMatch, `NESTED LOOP${forNested.length}`);
+    }
+  }
+  // Restore
+  for (let idx = 0; idx < forNested.length; idx++) {
+    rendered = rendered.replace(`NESTED LOOP${idx + 1}`, forNested[idx]);
+  }
+  return rendered;
+}
+
+function renderForAlongWithIndex(rendered, options) {
+  const forRegex =
+    /21461{for\s+(\w+)\s*,\s*(\w+)\s+in\s+([\w.]+)\s*}([\s\S]*?){\s*\/for\s*}/;
+  while ((match = forRegex.exec(rendered)) !== null) {
+    const [fullMatch, varName, varIndex, array, content] = match;
+    if (
+      fullMatch.match(
+        /21461{for\s+(\w+)\s*,\s*(\w+)\s+in\s+([\w.]+)\s*}([\s\S]*?)\s*21461{for\s+(\w+)\s+in\s+(\w+)\s*}([\s\S]*?){\s*\/for\s*}/
+      ) != null
+    ) {
+      break;
+    }
+    console.log(fullMatch);
+    let items = [];
+    array.split(".").forEach((prop, idx) => {
+      if (idx == 0) {
+        items = options[[prop]];
+      } else {
+        let value = items[prop];
+        items = value;
+      }
+    });
+    let startIdx = 0;
+    if (Array.isArray(items)) {
+      // Thực hiện vòng lặp và thay thế nội dung vòng lặp trong template
+      const replacement = items
+        .map((item) => {
+          // Thay thế biến trong phần nội dung vòng lặp
+          const object = { [varName]: item, [varIndex]: startIdx };
+          // console.log(content);
+          const itemContent = render(content, object);
+          startIdx++;
+          return itemContent;
+        })
+        .join("");
+      rendered = rendered.replace(fullMatch, replacement);
+    } else {
+      // Nếu không phải mảng, loại bỏ vòng lặp
       rendered = rendered.replace(fullMatch, "");
     }
   }
@@ -136,7 +189,7 @@ function renderFor(rendered, options) {
 
 function renderForIndex(rendered, options) {
   const forRegex =
-    /21461{for\s+(\w+)\s+from\s+(\w+)\s+to\s+([\w.]+)\s*}([\s\S]*?){\s*\/for\s*}/gs;
+    /21461{for\s+(\w+)\s+from\s+(\w+)\s+to\s+([\w.]+)\s*}([\s\S]*?){\s*\/for\s*}/;
   while ((match = forRegex.exec(rendered)) !== null) {
     const [fullMatch, variable, start, end, content] = match;
     // Thực hiện vòng lặp và thay thế nội dung vòng lặp trong template
@@ -166,14 +219,16 @@ function renderForIndex(rendered, options) {
 }
 
 function renderNestedFor(rendered, options) {
+  // console.log(rendered);
   // Thêm hỗ trợ cho vòng lặp lồng nhau
   const nestedForRegex =
-    /21461{for\s+(\w+)\s+in\s+(\w+)\s*}([\s\S]*?)\s*21461{for\s+(\w+)\s+in\s+(\w+)\s*}([\s\S]*?){\s*\/for\s*}([\s\S]*?){\s*\/for\s*}/gs;
+    /21461{for\s+(\w+)\s*,\s*(\w+)\s+in\s+([\w.]+)\s*}([\s\S]*?)\s*21461{for\s+(\w+)\s+in\s+(\w+)\s*}([\s\S]*?){\s*\/for\s*}([\s\S]*?){\s*\/for\s*}/;
   let match;
   while ((match = nestedForRegex.exec(rendered)) !== null) {
     const [
       fullMatch,
       outerVar,
+      outerIdx,
       outerArrName,
       outerContent,
       innerVar,
@@ -181,17 +236,14 @@ function renderNestedFor(rendered, options) {
       innerInnerVar,
       innerContent,
     ] = match;
-    // console.log(match);
     const outerArrays = getValueFromPath(options, outerArrName);
+    console.log(outerIdx);
     if (Array.isArray(outerArrays)) {
       // Thực hiện vòng lặp ngoại và thay thế nội dung vòng lặp trong template
       const outerReplacement = outerArrays
-        .map((outerArr) => {
+        .map((outerArr, index) => {
           // console.log(outerArr);
           const innerArr = outerArr;
-          // console.log(innerArrName);
-          // const innerArr = getValueFromPath(outerArr, innerArrName);
-          // console.log(innerArr);
           if (Array.isArray(innerArr)) {
             // Thực hiện vòng lặp nội và thay thế nội dung vòng lặp trong template
             const innerReplacement = innerArr
@@ -202,7 +254,12 @@ function renderNestedFor(rendered, options) {
                 return itemContent;
               })
               .join("");
-            return innerReplacement;
+            let finalContent = outerContent + innerReplacement + innerContent;
+            finalContent = render(finalContent, { [outerIdx]: index });
+            finalContent = compareExpressions(finalContent, {
+              [outerIdx]: index,
+            });
+            return finalContent;
           }
           return "";
         })
@@ -215,7 +272,6 @@ function renderNestedFor(rendered, options) {
       rendered = rendered.replace(fullMatch, "");
     }
   }
-
   return rendered;
 }
 
@@ -236,7 +292,7 @@ function renderIf(rendered, options) {
 const renderTemplate = async function (filePath, options, callback) {
   const content = await fs.readFile(filePath, { encoding: "utf-8" });
   let rendered = content;
-  rendered = await renderPartials(rendered);
+  rendered = await renderPartials(rendered, options);
   rendered = render(rendered, options);
   // console.log(rendered);
   rendered = evaluateExpression(rendered, options);
@@ -245,11 +301,12 @@ const renderTemplate = async function (filePath, options, callback) {
   rendered = renderIf(rendered, options);
 
   // Thêm hỗ trợ cho vòng lặp lồng nhau
-  rendered = renderNestedFor(rendered, options);
+  // rendered = renderFor(rendered, options);
+  // rendered = renderForAlongWithIndex(rendered, options);
+  // rendered = renderNestedFor(rendered, options);
 
   //Thêm hỗ trợ cho câu lệnh for
   // console.log(rendered);
-  rendered = renderFor(rendered, options);
   rendered = renderForIndex(rendered, options);
   // console.log(rendered);
 

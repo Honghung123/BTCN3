@@ -3,14 +3,14 @@
         <div class="carousel-indicators">
             21461{for idxs from 0 to tops.total}
             <button type="button" data-bs-target="#carouselNewestMovie" data-bs-slide-to="21461{idxs}"
-                class="21461{if 21461{idxs} == 1 } active {/if}"
-                aria-current="21461{if 21461{idxs} == 1 } true {else} false {/if}"
+                class="21461{if 21461{idxs} == 0 } active {/if}"
+                aria-current="21461{if 21461{idxs} == 0 } true {else} false {/if}"
                 aria-label="'Slide ' + 21461{idxs}"></button>
             {/for}
         </div>
         <div class="carousel-inner">
-            21461{for movie in tops.film}
-            <div class="carousel-item active">
+            21461{for movie, movieIdx in tops.film}
+            <div class="carousel-item 21461{if 21461{movieIdx} == 0} active {/if}">
                 <img src="21461{movie.image}" class="d-block w-100" alt="..." width="200" height="500">
                 <div class="carousel-caption d-none d-md-block">
                     <h5>21461{movie.title}</h5>

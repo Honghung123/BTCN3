@@ -3,13 +3,21 @@ const Film = require("../models/film.m");
 async function getAllFilms(req, res, next) {
   try {
     const top5Rating = await Film.getTopRating();
-    const top5 = { total: top5Rating.total, film: top5Rating.items };
+    // BoxOffice
+    const topBoxOffice = await Film.getTopBoxOffice();
+    // Favourites
+    const favouriteList = await Film.getFavourites();
+    const boxoffList = [];
+    for (let i = 0; i < topBoxOffice.items.length; i += 3) {
+      boxoffList.push(topBoxOffice.items.slice(i, i + 3));
+    }
+    // console.log(topBoxOffice);
+    const tops = { total: top5Rating.total, film: top5Rating.items };
+    const boxoffice = { totalBox: boxoffList.length, boxoffList };
     // console.log(top5Rating);
     res.render("index", {
-      tops: top5,
-      age: 45,
-      tester: { prop1: "Hoang" },
-      student: { name: "Hung", age: 18 },
+      tops,
+      boxoffice,
     });
   } catch (error) {
     next(error);

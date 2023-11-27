@@ -11,7 +11,7 @@ module.exports = {
   getListDanhThu(movieList) {
     let list = [];
     movieList.forEach((movie) => {
-      list.push(movie.boxOffice.cumulativeWorldwideGross);
+      list.push(movie.boxOffice);
     });
     return list;
   },
@@ -27,17 +27,14 @@ module.exports = {
     // Bước 4: Lấy 3 giá trị lớn nhất
     const topDanhthu = numericValues.slice(0, count);
     let res = movieList.filter((movie) => {
-      let str = movie.boxOffice.cumulativeWorldwideGross;
+      let str = movie.boxOffice;
       return topDanhthu.includes(
         parseFloat(str.replace("$", "").replaceAll(",", ""))
       );
     });
     for (let i = 0; i < res.length - 1; i++) {
       for (let j = i; j < res.length; j++) {
-        if (
-          res[i].boxOffice.cumulativeWorldwideGross <
-          res[j].boxOffice.cumulativeWorldwideGross
-        ) {
+        if (res[i].boxOffice < res[j].boxOffice) {
           let swap = res[i];
           res[i] = res[j];
           res[j] = swap;
@@ -56,9 +53,10 @@ module.exports = {
     list = list.sort(
       (movie1, movie2) =>
         movie2.imDbRating.toString() - movie1.imDbRating.toString()
-    ); 
+    );
     return list.slice(0, count);
   },
+  getFavouriteFilm(movieList, count) {},
   async fetch(query) {
     try {
       const jsonData = await fs.readFileSync(pathToFile);
@@ -114,16 +112,42 @@ module.exports = {
             //   // Xử lý các loại khác tương tự cho lấy danh sách.
           }
         } else if (type == "get") {
-          if (pattern == "top5") {
-            items = this.getTopRating(movies, 5);
-            return {
-              search: rest,
-              page : 1,
-              per_page : 1,
-              total_page : 1,
-              total : 5,
-              items,
-            };
+          if (className == "movie") {
+            if (pattern == "top5") {
+              items = this.getTopRating(movies, 5);
+              return {
+                search: rest,
+                page: 1,
+                per_page: 1,
+                total_page: 1,
+                total: 5,
+                items,
+              };
+            }
+            if (pattern == "topboxoffice") {
+              items = this.getMaxDanhThu(movies, 24);
+              // console.log(items.length);
+              return {
+                search: rest,
+                page: 1,
+                per_page: 1,
+                total_page: 1,
+                total: 24,
+                items,
+              };
+            }
+            if (pattern == "favourite") {
+              items = this.getFavouriteFilm(movies, 24);
+              // console.log(items.length);
+              return {
+                search: rest,
+                page: 1,
+                per_page: 1,
+                total_page: 1,
+                total: 24,
+                items,
+              };
+            }
           }
         }
       }

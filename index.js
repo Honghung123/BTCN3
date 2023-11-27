@@ -1,10 +1,10 @@
 // Import module
 require("dotenv").config();
-const port = process.env.PORT | 3000;
-const hostname = process.env.HOST | "localhost";
 const express = require("express");
 const app = express();
 const fs = require("fs/promises");
+const port = process.env.PORT;
+const hostname = process.env.HOST;
 
 app.use(express.static(__dirname));
 app.use(express.urlencoded({ extended: true }));

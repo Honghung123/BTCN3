@@ -1,11 +1,8 @@
 const DBProvider = require("../db/db21461s");
 const tableName = "person";
 module.exports = class User {
-  static loadAPI = false;
-  constructor({ movies, names, reviews }) {
-    this.movies = movies;
-    this.names = names;
-    this.reviews = reviews;
+  constructor(favourite) {
+    this.favourite = favourite;
   }
   static async getAll() {
     const data = await DBProvider.fetch("get/movie/top5?per_page=2&page=1");
@@ -15,6 +12,19 @@ module.exports = class User {
     const data = await DBProvider.fetch("get/movie/top5?per_page=2&page=1");
     return data;
   }
+  static async getTopBoxOffice() {
+    const data = await DBProvider.fetch(
+      "get/movie/topboxoffice?per_page=24&page=1"
+    );
+    return data;
+  }
+  static async getFavourites() {
+    const data = await DBProvider.fetch(
+      "get/movie/favourite?per_page=24&page=1"
+    );
+    return data;
+  }
+
   // static async saveAll(people) {
   //   return await db.saveAll(tableName, people);
   // }
