@@ -164,6 +164,18 @@ module.exports = {
                 items,
               };
             }
+            if (pattern == "info") {
+              items = this.getMovieById();
+              // console.log(items.length);
+              return {
+                search: rest,
+                page: 1,
+                per_page: 1,
+                total_page: 1,
+                total: 1,
+                items,
+              };
+            }
           }
         }
       }

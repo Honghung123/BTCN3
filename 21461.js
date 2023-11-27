@@ -83,6 +83,7 @@ function compareExpressions(rendered, options) {
 
 // Hàm đệ quy để xử lý các phần template nhỏ
 async function renderPartials(rendered, options) {
+  console.log(options);
   // Thêm hỗ trợ cho các phần template nhỏ
   const partialRegex = /21461{\+\s*([\w.]+)\s*}/g;
   let match;
@@ -114,7 +115,7 @@ function renderFor(rendered, options) {
       if (idx == 0) {
         items = options[[prop]];
       } else {
-        let value = items[prop];
+        let value = items[[prop]];
         items = value;
       }
     });
@@ -155,7 +156,7 @@ function renderForAlongWithIndex(rendered, options) {
     ) {
       break;
     }
-    console.log(fullMatch);
+    // console.log(fullMatch);
     let items = [];
     array.split(".").forEach((prop, idx) => {
       if (idx == 0) {

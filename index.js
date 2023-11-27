@@ -21,6 +21,7 @@ app.use("/", filmRouter);
 
 // Middleware
 const middleware = require("./middlewares/mdw");
+app.use(middleware.badRequest);
 app.use(middleware.middleware);
 
 // Connection

@@ -11,7 +11,10 @@
         <div class="carousel-inner">
             21461{for movie, movieIdx in tops.film}
             <div class="carousel-item 21461{if 21461{movieIdx} == 0} active {/if}">
-                <img src="21461{movie.image}" class="d-block w-100" alt="..." width="200" height="500">
+                <a href="/movie/21461{movie.id}">
+                    <img src="21461{movie.image}" class="d-block w-100 showMovieInfo" alt="..." width="200"
+                        height="500">
+                </a>
                 <div class="carousel-caption d-none d-md-block">
                     <h5>21461{movie.title}</h5>
                     <p>Length: <span>21461{movie.runtimeStr}</span> - Rating: <span>21461{movie.imDbRating}</span></p>

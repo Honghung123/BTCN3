@@ -1,6 +1,7 @@
 const DBProvider = require("../db/db21461s");
 const tableName = "person";
 module.exports = class User {
+  static lastId = "";
   constructor(favourite) {
     this.favourite = favourite;
   }
@@ -22,6 +23,15 @@ module.exports = class User {
     const data = await DBProvider.fetch(
       "get/movie/favourite?per_page=24&page=1"
     );
+    return data;
+  }
+  static async getMovieInfoById(id) {
+    if (id.includes(".")) {
+      id = this.lastId;
+    }
+    this.lastId = id;
+    console.log(this.lastId);
+    const data = await DBProvider.fetch(`detail/movie/${id}`);
     return data;
   }
 
