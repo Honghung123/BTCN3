@@ -10,10 +10,10 @@
             {/for}
         </div>
         <div class="carousel-inner overflow-visible">
-            21461{for favArr, FavsIdx in favourites.favourite}
+            21461{for favArr, FavsIdx in favourites.favList}
             <div class="carousel-item 21461{if 21461{FavsIdx} == 0} active {/if}">
                 21461{for favFilm in favArr}
-                <div class="courseItem position-relative">
+                <div class="courseItem position-relative left-8">
                     <img src="21461{favFilm.image}" class="d-block w-100 h-100" alt="...">
                     <div
                         class="position-absolute title-movie bg-black text-white w-100 text-center translate-top-100 d-none">
@@ -30,7 +30,7 @@
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Previous</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselTopRating" data-bs-slide="next">
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselTopFavourite" data-bs-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Next</span>
         </button>

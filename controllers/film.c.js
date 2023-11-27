@@ -11,13 +11,19 @@ async function getAllFilms(req, res, next) {
     for (let i = 0; i < topBoxOffice.items.length; i += 3) {
       boxoffList.push(topBoxOffice.items.slice(i, i + 3));
     }
+    const favList = [];
+    for (let i = 0; i < favouriteList.items.length; i += 3) {
+      favList.push(favouriteList.items.slice(i, i + 3));
+    }
     // console.log(topBoxOffice);
     const tops = { total: top5Rating.total, film: top5Rating.items };
     const boxoffice = { totalBox: boxoffList.length, boxoffList };
+    const favourites = { totalFav: favList.length, favList };
     // console.log(top5Rating);
     res.render("index", {
       tops,
       boxoffice,
+      favourites
     });
   } catch (error) {
     next(error);

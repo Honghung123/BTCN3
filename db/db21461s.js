@@ -56,7 +56,23 @@ module.exports = {
     );
     return list.slice(0, count);
   },
-  getFavouriteFilm(movieList, count) {},
+  getFavouriteFilm(movieList, count) {
+    let listFav = [];
+    let length = movieList.length;
+    for (let idx = 0; idx < count; idx++) {
+      if (
+        movieList[idx].imDbRating != "" &&
+        movieList[idx].imDbRating != null
+      ) {
+        listFav.push(movieList[idx]);
+      }
+    }
+    listFav = listFav.sort(
+      (movie1, movie2) =>
+        movie2.imDbRating.toString() - movie1.imDbRating.toString()
+    );
+    return listFav;
+  },
   async fetch(query) {
     try {
       const jsonData = await fs.readFileSync(pathToFile);
@@ -137,14 +153,14 @@ module.exports = {
               };
             }
             if (pattern == "favourite") {
-              items = this.getFavouriteFilm(movies, 24);
+              items = this.getFavouriteFilm(movies, 21);
               // console.log(items.length);
               return {
                 search: rest,
                 page: 1,
                 per_page: 1,
                 total_page: 1,
-                total: 24,
+                total: 21,
                 items,
               };
             }

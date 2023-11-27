@@ -57,12 +57,12 @@ a {
   }
 }
 
-#carouselMostPopular > .carousel-indicators,
+#carouselTopFavourite > .carousel-indicators,
 #carouselTopRating > .carousel-indicators {
   margin-right: 3%;
   top: -9%;
   left: auto;
-  right: 1%;
+  right: 8%;
   z-index: 0;
 }
 
@@ -84,6 +84,10 @@ a {
   & > img {
     object-fit: cover;
   }
+}
+
+.left-8 {
+  left: 8rem;
 }
 
 .actor {
